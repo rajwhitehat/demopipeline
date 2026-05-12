@@ -23,11 +23,11 @@ steps:
           -Dsonar.token=$$SONAR_TOKEN
     secretEnv: ['SONAR_TOKEN']
     
-  # 4. Build Docker Image
+  # 4. Build Docker Image (Use :latest)
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:latest', '.']
 
-  # 5. Push to Artifact Registry
+  # 5. Push to Artifact Registry (Use :latest)
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:latest']
 
@@ -39,12 +39,12 @@ steps:
       - |
         gcloud container clusters get-credentials $_GKE_CLUSTER --region $_GKE_LOCATION --project $PROJECT_ID
 
-  # 7. Deploy to GKE
+  # 7. Deploy to GKE (Use :latest)
   - name: 'gcr.io/cloud-builders/gke-deploy'
     args:
       - 'run'
       - '--filename=$_K8S_YAML_PATH'
-      - '--image=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA'
+      - '--image=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:latest' # Must match exactly
       - '--location=$_GKE_LOCATION'
       - '--cluster=$_GKE_CLUSTER'
 
