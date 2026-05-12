@@ -1,24 +1,22 @@
 steps:
   # 1. Run Sonar Scan
   # Note: This runs on the source code before the Docker build
+  # 1. Fix workspace permissions for the non-root Sonar user (UID 1000)
+  - name: 'alpine'
+    args: ['chown', '-R', '1000:1000', '/workspace']
+
+  # 2. Run Sonar Scan (Now it has permission)
   - name: 'sonarsource/sonar-scanner-cli'
-    user: 'root'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        # Now that we are root, we can create these directories
-        mkdir -p /workspace/.scannerwork
-        mkdir -p /workspace/.sonar
-        
         sonar-scanner \
           -Dsonar.projectKey=$_SONAR_PROJECT_KEY \
           -Dsonar.organization=$_SONAR_ORG \
           -Dsonar.sources=src \
           -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.token=$$SONAR_TOKEN \
-          -Dsonar.working.directory=/workspace/.scannerwork \
-          -Dsonar.userHome=/workspace/.sonar
+          -Dsonar.token=$$SONAR_TOKEN
     secretEnv: ['SONAR_TOKEN']
 
   # 2. Build and Tag the Image
