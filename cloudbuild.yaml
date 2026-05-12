@@ -57,7 +57,7 @@ substitutions:
   _IMAGE_NAME: "gke-demo"
   _GKE_CLUSTER: "autopilot-cluster-1"
   _GKE_LOCATION: "asia-south1"
-  _K8S_YAML_PATH: ""
+  _K8S_YAML_PATH: "."
 
 options:
   logging: CLOUD_LOGGING_ONLY
