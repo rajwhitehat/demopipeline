@@ -1,0 +1,56 @@
+steps:
+  # 1. Run Sonar Scan
+  # Note: This runs on the source code before the Docker build
+  - name: 'sonarsource/sonar-scanner-cli'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        sonar-scanner \
+          -Dsonar.projectKey=$_SONAR_PROJECT_KEY \
+          -Dsonar.organization=$_SONAR_ORG \
+          -Dsonar.sources=src \
+          -Dsonar.java.binaries=target/classes \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.login=$$SONAR_TOKEN
+    secretEnv: ['SONAR_TOKEN']
+
+  # 2. Build and Tag the Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', 
+      '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA', 
+      '.'
+    ]
+
+  # 3. Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA']
+
+  # 4. Deploy to GKE
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    args:
+      - 'run'
+      - '--filename=$_K8S_YAML_PATH'
+      - '--image=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA'
+      - '--location=$_GKE_LOCATION'
+      - '--cluster=$_GKE_CLUSTER'
+
+# Pull Secret from Secret Manager
+availableSecrets:
+  secretManager:
+  - versionName: projects/$PROJECT_ID/secrets/sonarcloud_token/versions/latest
+    env: 'SONAR_TOKEN'
+
+substitutions:
+  _SONAR_PROJECT_KEY: "rajwhitehat_demopipeline"
+  _SONAR_ORG: "rajwhitehat"
+  _AR_HOSTNAME: "asia-south1-docker.pkg.dev" # Change to your registry region
+  _AR_REPO_NAME: "learngke"
+  _IMAGE_NAME: "gke-demo"
+  _GKE_CLUSTER: "autopilot-cluster-1"
+  _GKE_LOCATION: "asia-south1"
+  _K8S_YAML_PATH: ""
+
+options:
+  logging: CLOUD_LOGGING_ONLY
