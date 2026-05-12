@@ -1,11 +1,17 @@
 steps:
   # 1. Run Sonar Scan
-  # Note: This runs on the source code before the Docker build
   # 1. Fix workspace permissions for the non-root Sonar user (UID 1000)
   - name: 'alpine'
     args: ['chown', '-R', '1000:1000', '/workspace']
 
-  # 2. Run Sonar Scan (Now it has permission)
+   # 2. Compile the Java code
+  # This creates the 'target/classes' folder that Sonar needs
+  - name: 'maven:3.9.6-eclipse-temurin-21'
+    entrypoint: 'mvn'
+    args: ['clean', 'compile', '-DskipTests']
+
+# 3. Run Sonar Scan
+  # We add the -Dsonar.java.binaries flag pointing to the compiled classes
   - name: 'sonarsource/sonar-scanner-cli'
     entrypoint: 'bash'
     args:
@@ -15,23 +21,20 @@ steps:
           -Dsonar.projectKey=$_SONAR_PROJECT_KEY \
           -Dsonar.organization=$_SONAR_ORG \
           -Dsonar.sources=src \
+          -Dsonar.java.binaries=target/classes \
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.token=$$SONAR_TOKEN
     secretEnv: ['SONAR_TOKEN']
-
-  # 2. Build and Tag the Image
+    
+    # 4. Build and Tag (Docker)
   - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'build', 
-      '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA', 
-      '.'
-    ]
+    args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA', '.']
 
-  # 3. Push to Artifact Registry
+  # 5. Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA']
 
-  # 4. Deploy to GKE
+  # 6. Deploy to GKE
   - name: 'gcr.io/cloud-builders/gke-deploy'
     args:
       - 'run'
