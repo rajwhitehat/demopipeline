@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spring-boot
+  template:
+    metadata:
+      labels:
+        app: spring-boot
+    spec:
+      containers:
+      - name: spring-container
+        image: asia-south1-docker.pkg.dev/primal-library-488912-a6/learngke/gke-demo:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests: 
+            memory: "512Mi"
+            cpu: "500m"
+            
