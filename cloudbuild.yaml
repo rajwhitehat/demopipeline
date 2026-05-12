@@ -25,11 +25,11 @@ steps:
     
   # 4. Build Docker Image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA', '.']
+    args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:latest', '.']
 
   # 5. Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:$COMMIT_SHA']
+    args: ['push', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO_NAME/$_IMAGE_NAME:latest']
 
   # 6. FETCH GKE CREDENTIALS (This fixes the localhost:8080 error)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
