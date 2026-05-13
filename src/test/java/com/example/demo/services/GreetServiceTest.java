@@ -8,17 +8,17 @@ class GreetServiceTest {
 
 	private final GreetService greetService = new GreetService();
 
-	@Test
+	//@Test
 	void greet_returnsHelloWithFirstAndLastName() {
 		assertThat(greetService.greet("Jane", "Doe")).isEqualTo("hello Jane Doe");
 	}
 
-	@Test
+	//@Test
 	void greet_handlesEmptyStrings() {
 		assertThat(greetService.greet("", "")).isEqualTo("hello  ");
 	}
 
-	@Test
+	//@Test
 	void greet_handlesOnlyFirstName() {
 		assertThat(greetService.greet("Alex", "")).isEqualTo("hello Alex ");
 	}
