@@ -1,0 +1,59 @@
+# 1. Clear the hardcoded defaults at the root level
+defaultVolumes: null
+defaultVolumeMounts: null
+
+# 2. Clear the hardcoded defaults inside the chart's specific component block
+promtail:
+  defaultVolumes: null
+  defaultVolumeMounts: null
+
+# 3. Your existing working configurations go right here:
+extraVolumes:
+  - name: pods
+    hostPath:
+      path: /var/log/pods
+  - name: tmp-scratch
+    emptyDir: {}
+
+extraVolumeMounts:
+  - name: pods
+    mountPath: /var/log/pods
+    readOnly: true
+  - name: tmp-scratch
+    mountPath: /tmp
+    readOnly: false
+
+config:
+  clients:
+    - url: http://plg-stack-loki:3100/loki/api/v1/push
+  snippets:
+    pipelineStages:
+      - cri: {}
+  positions:
+    filename: /tmp/positions.yaml
+
+resources:
+  requests:
+    cpu: "50m"
+    memory: "100Mi"
+  limits:
+    cpu: "100m"
+    memory: "200Mi"
+
+containerSecurityContext:
+  readOnlyRootFilesystem: true
+  runAsGroup: 0
+  runAsUser: 0
+  privileged: false
+  capabilities:
+    drop:
+      - ALL
+    add:
+      - DAC_OVERRIDE
+      - FOWNER
+
+tolerations:
+  - operator: Exists
+  - key: "kubernetes.io/arch"
+    operator: "Exists"
+    effect: "NoSchedule"
